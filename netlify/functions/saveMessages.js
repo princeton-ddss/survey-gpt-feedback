@@ -23,25 +23,29 @@ const client = new Client({
 })
 
 exports.handler = async function (event) {
-    const request = JSON.parse(event.body);
+  const request = JSON.parse(event.body);
+  try {
     const response = await client.query(
-        Create(
-            Collection("surveys"),
-            {
-                ts: Date.now(),
-                data: {
-                    "session": request.session,
-                    "messages": request.messages,
-                }
-            }
-        )
-    )
-    try {
-        return {
-            statusCode: 200,
-            body: JSON.stringify(response),
+      Create(
+        Collection("feedback"),
+        {
+          ts: Date.now(),
+          data: {
+            "surveyId": request.surveyId,
+            "messages": request.messages,
+          }
         }
-    } catch (error) {
-        console.error(`Error [${error.name}]: ${error.message}`);
+      )
+    )
+    return {
+      statusCode: 200,
+      body: JSON.stringify(response),
     }
+  } catch (error) {
+    console.error(`Error [${error.name}]: ${error.message}`);
+    return {
+      statusCode: error.status,
+      body: `Error [${error.name}]: ${error.message}`,
+    }
+  }
 }
