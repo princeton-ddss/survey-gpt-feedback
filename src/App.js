@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Outlet, useParams } from 'react-router-dom';
 import './App.css';
-import { LinearProgress, List } from '@mui/material';
+import { List } from '@mui/material';
 import { ListItem } from '@mui/material';
 import { ListItemText } from '@mui/material';
 import { ListItemAvatar } from '@mui/material';
@@ -15,6 +15,7 @@ import { Alert } from '@mui/material';
 import { IconButton } from '@mui/material';
 import { Collapse } from '@mui/material';
 import { Typography } from '@mui/material';
+import { Skeleton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -133,7 +134,10 @@ function Feedback() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify([...prevMessages, userMessage]),
+            body: JSON.stringify({
+              surveyId: surveyId,
+              messages:[...prevMessages, userMessage],
+            }),
         });
         if (!res.ok) {
           const message = await res.text();
@@ -154,7 +158,6 @@ function Feedback() {
       setError(error);
     }
     if (response) {
-      setIsLoading(false);
       const newMessages = await response.json();
       const index = newMessages[newMessages.length - 1].content.search("<SURVEY_ENDED>");
       if (index > -1) {
@@ -172,6 +175,7 @@ function Feedback() {
         role: "user",
         content: "",
       });
+      setIsLoading(false);
     }
   }
 
@@ -197,6 +201,7 @@ function Feedback() {
   return (
     <div>
       <Messages
+        isLoading={isLoading}
         messages={messages} />
       {!surveyFinished ? (
         <Input
@@ -225,9 +230,9 @@ function Messages(props) {
   return (
     <div className="Messages">
       <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-        {props.messages.slice(1).map((message) =>
+        {props.messages.slice(1).map((message, index) =>
           <ListItem
-            key={message.content}
+            key={index}
             alignItems='flex-start'
             sx={{
               bgcolor: message.role === "assistant" ? assistantBackground : userBackground
@@ -239,6 +244,22 @@ function Messages(props) {
               primary={message.content}>
             </ListItemText>
           </ListItem>
+        )}
+        {props.isLoading && (
+          <ListItem
+            alignItems='flex-start'
+            sx={{
+              bgcolor: assistantBackground
+            }}>
+            <ListItemAvatar>
+                <Avatar alt={"Assistant"} src={assistant}/>
+            </ListItemAvatar>
+              <Skeleton>
+                <ListItemText
+                  primary="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Dui nunc mattis enim ut tellus.">
+                </ListItemText>
+              </Skeleton>
+          </ListItem>    
         )}
       </List>
     </div>
@@ -321,26 +342,6 @@ function Input(props) {
           </Grid> */}
 
       </Grid>
-      
-      {props.isLoading && (
-        <Grid
-          container
-          columns={24}
-          sx={{
-            'paddingTop': 2,
-          }}
-          spacing={2}>
-          <Grid item xs={1}></Grid>
-          <Grid
-            item
-            xs={22}>
-              <FormControl fullWidth>
-                <LinearProgress></LinearProgress>
-              </FormControl>
-          </Grid>
-          <Grid item xs={1}></Grid>
-        </Grid>
-      )}
       
     </div>
   )
